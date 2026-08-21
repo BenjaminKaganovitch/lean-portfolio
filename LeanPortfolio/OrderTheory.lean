@@ -1,9 +1,10 @@
 import Mathlib
 
 /-!
-# Infinite poset counterexample to order reflection
+# A monotone bijection from a finite poset to itself is an order isomorphism
 
-The shift `n ↦ n + 2` on `SparseInt` is a monotone bijection that fails to reflect `≤`.
+Informal claim: if `α` is a finite partial order and `f : α → α` is a monotone
+bijection, then `f a ≤ f b` implies `a ≤ b`, giving an order isomorphism `α ≃o α`.
 -/
 
 namespace LeanPortfolio.OrderTheory
@@ -52,17 +53,11 @@ lemma shift_monotone : Monotone shift := by
     refine ⟨by omega, by omega, by omega⟩
 
 lemma shift_bijective : Function.Bijective shift := by
-  constructor
-  · intro a b h
-    apply toInt_injective
-    have ht := congrArg toInt h
-    simp only [shift, toInt_ofInt] at ht
+  refine ⟨fun a b h => toInt_injective ?_, fun b => ⟨ofInt (toInt b - 2), toInt_injective ?_⟩⟩
+  · have := congrArg toInt h
+    simp only [shift, toInt_ofInt] at this
     omega
-  · intro b
-    refine ⟨ofInt (toInt b - 2), ?_⟩
-    apply toInt_injective
-    simp only [shift, toInt_ofInt]
-    omega
+  · simp [shift]
 
 lemma shift_le : shift (ofInt (-2)) ≤ shift (ofInt (-1)) := by
   rw [le_def]
@@ -85,5 +80,34 @@ theorem naive_false :
   exact SparseInt.not_le
     (h SparseInt SparseInt.shift SparseInt.shift_monotone SparseInt.shift_bijective _ _
       SparseInt.shift_le)
+
+theorem le_of_map_le {α : Type*} [PartialOrder α] [Finite α] {f : α → α}
+    (hf : Monotone f) (hb : Function.Bijective f) {a b : α} (h : f a ≤ f b) : a ≤ b := by
+  let g : {p : α × α // p.1 ≤ p.2} → {p : α × α // p.1 ≤ p.2} :=
+    fun p => ⟨(f p.1.1, f p.1.2), hf p.2⟩
+  have hg : Function.Injective g := by
+    rintro ⟨⟨x₁, x₂⟩, hx⟩ ⟨⟨y₁, y₂⟩, hy⟩ hxy
+    simp only [g, Subtype.mk.injEq, Prod.mk.injEq] at hxy
+    obtain rfl := hb.1 hxy.1
+    obtain rfl := hb.1 hxy.2
+    rfl
+  obtain ⟨⟨⟨x, y⟩, hxy⟩, hp⟩ := Finite.injective_iff_surjective.mp hg ⟨(f a, f b), h⟩
+  simp only [g, Subtype.mk.injEq, Prod.mk.injEq] at hp
+  rw [← hb.1 hp.1, ← hb.1 hp.2]
+  exact hxy
+
+theorem map_le_map_iff {α : Type*} [PartialOrder α] [Finite α] {f : α → α}
+    (hf : Monotone f) (hb : Function.Bijective f) {a b : α} : f a ≤ f b ↔ a ≤ b :=
+  ⟨le_of_map_le hf hb, fun h => hf h⟩
+
+noncomputable def orderIsoOfMonotoneBijective {α : Type*} [PartialOrder α] [Finite α]
+    {f : α → α} (hf : Monotone f) (hb : Function.Bijective f) : α ≃o α where
+  toEquiv := Equiv.ofBijective f hb
+  map_rel_iff' := map_le_map_iff hf hb
+
+@[simp] lemma coe_orderIsoOfMonotoneBijective {α : Type*} [PartialOrder α] [Finite α]
+    {f : α → α} (hf : Monotone f) (hb : Function.Bijective f) :
+    ⇑(orderIsoOfMonotoneBijective hf hb) = f :=
+  rfl
 
 end LeanPortfolio.OrderTheory
