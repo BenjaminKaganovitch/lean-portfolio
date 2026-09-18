@@ -11,15 +11,12 @@ namespace LeanPortfolio.Analysis
 
 theorem naive_hyp_unsat : ¬ ∃ f : ℝ → ℝ, ∀ x y, |f x - f y| ≤ x - y ^ 2 := by
   rintro ⟨f, hf⟩
-  have h1 : |f 0 - f 1| ≤ (0 : ℝ) - 1 ^ 2 := hf 0 1
-  have h2 : (0 : ℝ) ≤ |f 0 - f 1| := abs_nonneg (f 0 - f 1)
-  linarith
+  linarith [hf 0 1, abs_nonneg (f 0 - f 1)]
 
 theorem naive_vacuous :
     ∀ f : ℝ → ℝ, (∀ x y, |f x - f y| ≤ x - y ^ 2) → ∀ x y, f x = f y := by
-  intro f hf _x _y
-  exfalso
-  exact naive_hyp_unsat ⟨f, hf⟩
+  intro f hf
+  exact absurd ⟨f, hf⟩ naive_hyp_unsat
 
 theorem abs_sub_le_sq_of_sub_le_sq {f : ℝ → ℝ} (h : ∀ x y, f x - f y ≤ (x - y) ^ 2)
     (x y : ℝ) : |f x - f y| ≤ (x - y) ^ 2 := by
@@ -55,3 +52,8 @@ theorem eq_of_abs_sub_le_sq {f : ℝ → ℝ} (h : ∀ x y, |f x - f y| ≤ (x -
   linarith
 
 end LeanPortfolio.Analysis
+
+#print axioms LeanPortfolio.Analysis.naive_hyp_unsat
+#print axioms LeanPortfolio.Analysis.naive_vacuous
+#print axioms LeanPortfolio.Analysis.abs_sub_le_sq_of_sub_le_sq
+#print axioms LeanPortfolio.Analysis.eq_of_abs_sub_le_sq

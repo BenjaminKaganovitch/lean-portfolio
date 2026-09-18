@@ -50,7 +50,7 @@ lemma shift_monotone : Monotone shift := by
   · exact Or.inl rfl
   · right
     simp only [shift, toInt_ofInt]
-    refine ⟨by omega, by omega, by omega⟩
+    omega
 
 lemma shift_bijective : Function.Bijective shift := by
   refine ⟨fun a b h => toInt_injective ?_, fun b => ⟨ofInt (toInt b - 2), toInt_injective ?_⟩⟩
@@ -111,3 +111,8 @@ noncomputable def orderIsoOfMonotoneBijective {α : Type*} [PartialOrder α] [Fi
   rfl
 
 end LeanPortfolio.OrderTheory
+
+#print axioms LeanPortfolio.OrderTheory.naive_false
+#print axioms LeanPortfolio.OrderTheory.le_of_map_le
+#print axioms LeanPortfolio.OrderTheory.map_le_map_iff
+#print axioms LeanPortfolio.OrderTheory.orderIsoOfMonotoneBijective
