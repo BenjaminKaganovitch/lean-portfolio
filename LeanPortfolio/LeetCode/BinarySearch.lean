@@ -16,6 +16,9 @@ def BinarySearchSpec (a : Array Int) (target : Int) (r : Option ℕ) : Prop :=
   (∀ i, r = some i → i < a.size ∧ a[i]! = target) ∧
   (r = none → ∀ i, i < a.size → a[i]! ≠ target)
 
+def WeakSpec (a : Array Int) (target : Int) (r : Option ℕ) : Prop :=
+  ∀ i, r = some i → i < a.size ∧ a[i]! = target
+
 /-- Search the half-open window `[lo, hi)`. -/
 def search (a : Array Int) (target : Int) (lo hi : ℕ) : Option ℕ :=
   if lo < hi then
@@ -66,12 +69,10 @@ theorem search_complete (a : Array Int) (target : Int) (hs : Sorted a) (lo hi : 
 
 theorem binarySearch_spec (a : Array Int) (target : Int) (hs : Sorted a) :
     BinarySearchSpec a target (binarySearch a target) := by
-  constructor
-  · intro i h
-    have hsnd := search_sound a target 0 a.size i h
-    exact ⟨hsnd.1, hsnd.2⟩
-  · intro h i hi
-    exact search_complete a target hs 0 a.size le_rfl h i (Nat.zero_le _) hi
+  refine ⟨fun i h => ?_, fun h i hi => ?_⟩
+  · have := search_sound a target 0 a.size i h
+    exact ⟨this.1, this.2⟩
+  · exact search_complete a target hs 0 a.size le_rfl h i (Nat.zero_le _) hi
 
 lemma needs_sorted : binarySearch #[2, 3, 1] 1 = none := by
   simp [binarySearch, search]
@@ -79,6 +80,23 @@ lemma needs_sorted : binarySearch #[2, 3, 1] 1 = none := by
 lemma needs_sorted_spec : ¬ BinarySearchSpec #[2, 3, 1] 1 (binarySearch #[2, 3, 1] 1) := by
   intro h
   have := h.2 needs_sorted 2 (by simp)
+  simp at this
+
+def searchWrong (_a : Array Int) (_target : Int) : Option ℕ := none
+
+lemma sorted_singleton (x : Int) : Sorted #[x] := by
+  intro i j hij hj
+  simp only [List.size_toArray, List.length_singleton] at hj
+  obtain rfl : j = 0 := by omega
+  obtain rfl : i = 0 := by omega
+  exact le_rfl
+
+theorem weak_spec_insufficient :
+    ∃ impl : Array Int → Int → Option ℕ,
+      (∀ a target, Sorted a → WeakSpec a target (impl a target)) ∧
+      ¬ ∀ a target, Sorted a → BinarySearchSpec a target (impl a target) := by
+  refine ⟨searchWrong, fun a target _ i h => by simp [searchWrong] at h, fun h => ?_⟩
+  have := (h #[1] 1 (sorted_singleton 1)).2 rfl 0 (by simp)
   simp at this
 
 end LeanPortfolio.LeetCode.BinarySearch
