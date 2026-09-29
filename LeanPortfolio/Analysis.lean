@@ -3,8 +3,21 @@ import Mathlib
 /-!
 # If `|f x - f y| ≤ (x - y) ^ 2` for all real `x, y`, then `f` is constant
 
-Includes the vacuous `x - y ^ 2` variant and the proof via midpoint halving and
-`Filter.Tendsto`.
+## Design notes
+
+* Naive version: `|f x - f y| ≤ x - y ^ 2`, which Lean parses as `x - (y ^ 2)`.
+  `naive_vacuous` states it. It compiles and is proven, and it says nothing about `f`:
+  at `x = 0`, `y = 1` the hypothesis reads `|f 0 - f 1| ≤ -1`, so no `f` satisfies it
+  (`naive_hyp_unsat`), and the proof only refutes the hypothesis.
+* Remarks not proved in this file: the argument needs midpoints and an exponent above 1.
+  The same proof works over `ℚ`. Over `ℤ`, `f n = n` satisfies the bound.
+* The one-sided bound `f x - f y ≤ (x - y) ^ 2` implies the two-sided one: swap `x` and
+  `y` (`abs_sub_le_sq_of_sub_le_sq`). The converse is `le_abs_self`.
+* Proof: by induction on `k`, `|f x - f y| ≤ (x - y) ^ 2 * (1 / 2) ^ k`. The step splits
+  at the midpoint, each half contributing `((x - y) / 2) ^ 2 * (1 / 2) ^ k`. Then let
+  `k → ∞`. No derivatives or mean value theorem.
+* Prior formalizations: none found in Mathlib (grep, Loogle, LeanSearch). Other public
+  repositories were not searched. No public formalization was consulted.
 -/
 
 namespace LeanPortfolio.Analysis

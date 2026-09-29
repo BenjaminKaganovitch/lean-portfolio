@@ -4,7 +4,28 @@ import Mathlib
 # A monotone bijection from a finite poset to itself is an order isomorphism
 
 Informal claim: if `α` is a finite partial order and `f : α → α` is a monotone
-bijection, then `f a ≤ f b` implies `a ≤ b`, giving an order isomorphism `α ≃o α`.
+bijection, then `f a ≤ f b` implies `a ≤ b`, so `f` is an order isomorphism. Main
+theorem `le_of_map_le`; `map_le_map_iff` gives the iff and `orderIsoOfMonotoneBijective`
+the `α ≃o α`.
+
+## Design notes
+
+* Without finiteness the claim is false (`naive_false`). In `SparseInt`, the integers
+  whose only relations besides `a ≤ a` are `2k ≤ 2k + 1` for `k ≥ 0`, the shift
+  `n ↦ n + 2` is a monotone bijection sending the unrelated pair `-2, -1` to the related
+  pair `0, 1`. It preserves `≤` and fails to reflect it, which `le_of_map_le` rules out on
+  a finite poset.
+* `naive_false` quantifies over `α : Type`. One counterexample there refutes the naive
+  claim.
+* `SparseInt` is a type synonym with explicit `toInt` and `ofInt`, so its order never
+  meets the one on `ℤ`, and the arithmetic goes through `toInt` where `omega` can see it.
+* Proof: `f` acts injectively on the finite set `{(a, b) | a ≤ b}`, hence surjectively.
+  So `(f a, f b)` has a preimage `(a', b')` with `a' ≤ b'`, and injectivity of `f` gives
+  `a' = a`, `b' = b`.
+* Only injectivity is used. On a finite type it is equivalent to bijectivity, and the
+  statement keeps `Function.Bijective` to match the informal claim.
+* Prior formalizations: none found in Mathlib (grep, Loogle, LeanSearch). Other public
+  repositories were not searched. No public formalization was consulted.
 -/
 
 namespace LeanPortfolio.OrderTheory

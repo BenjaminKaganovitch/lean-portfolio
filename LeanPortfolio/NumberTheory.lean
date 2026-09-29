@@ -3,7 +3,21 @@ import Mathlib
 /-!
 # If `1 ≤ n` and `n ∣ 2 ^ n - 1` then `n = 1`
 
-Proof via `orderOf (2 : ZMod p)` for the least prime factor `p = n.minFac`.
+Informal claim: if a positive integer `n` divides `2^n - 1`, then `n = 1`.
+
+## Design notes
+
+* Without `1 ≤ n` the statement fails at `n = 0`, since `2 ^ 0 - 1 = 0` and `0 ∣ 0`
+  (`naive_false`). The hypothesis is what "positive" meant.
+* Truncated subtraction is harmless because `1 ≤ 2 ^ n`. The proof moves to `ZMod p`
+  with `Nat.cast_sub`.
+* Proof: let `p` be the least prime factor of `n`. The order `d` of `2` in `ZMod p`
+  divides `n`, and by Fermat it divides `p - 1`. If `d ≥ 2` it is a divisor of `n` below
+  `p`, contradicting minimality, so `d = 1` and `2 = 1` in `ZMod p`.
+* Source and prior work: this is Putnam 1972 A5. PutnamBench states it
+  (`putnam_1972_a5`, over `ℤ` with `n > 1`) with no proof. None found in Mathlib (grep and
+  Loogle) or compfiles (commit `1745e6c`). Other public repositories were not searched.
+  The proof was written without consulting any existing one.
 -/
 
 namespace LeanPortfolio.NumberTheory
