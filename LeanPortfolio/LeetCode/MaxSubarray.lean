@@ -14,6 +14,9 @@ def IsMaxOver (P : List Int → Prop) (v : Int) : Prop :=
 def MaxSubarraySpec (nums : List Int) (r : Int) : Prop :=
   IsMaxOver (· <:+: nums) r
 
+def WeakSpec (nums : List Int) (r : Int) : Prop :=
+  ∃ s, s <:+: nums ∧ s ≠ [] ∧ s.sum = r
+
 def kadane (x : Int) : List Int → Int × Int
   | [] => (x, x)
   | y :: ys =>
@@ -42,12 +45,11 @@ theorem kadane_spec (x : Int) (l : List Int) :
         rw [ht]
       · rw [List.infix_nil] at h
         exact absurd h hne
-    constructor
-    · refine ⟨⟨[x], List.prefix_refl _, by simp, by simp [kadane]⟩, fun s hs hne => ?_⟩
-      rw [key s hs.isInfix hne]
+    refine ⟨⟨⟨[x], List.prefix_refl _, by simp, by simp [kadane]⟩, fun s hs hne => ?_⟩,
+      ⟨⟨[x], List.infix_refl _, by simp, by simp [kadane]⟩, fun s hs hne => ?_⟩⟩
+    · rw [key s hs.isInfix hne]
       simp [kadane]
-    · refine ⟨⟨[x], List.infix_refl _, by simp, by simp [kadane]⟩, fun s hs hne => ?_⟩
-      rw [key s hs hne]
+    · rw [key s hs hne]
       simp [kadane]
   | cons y ys ih =>
     obtain ⟨⟨⟨sp, hsp, hspne, hspsum⟩, hpmax⟩, ⟨⟨si, hsi, hsine, hsisum⟩, himax⟩⟩ := ih y
@@ -87,5 +89,25 @@ theorem maxSubArray_spec (nums : List Int) (h : nums ≠ []) :
   cases nums with
   | nil => exact absurd rfl h
   | cons x xs => exact (kadane_spec x xs).2
+
+def maxSubArrayWrong : List Int → Int
+  | [] => 0
+  | x :: _ => x
+
+theorem maxSubArrayWrong_weak (nums : List Int) (h : nums ≠ []) :
+    WeakSpec nums (maxSubArrayWrong nums) := by
+  cases nums with
+  | nil => exact absurd rfl h
+  | cons x xs =>
+    exact ⟨[x], (List.cons_prefix_cons.mpr ⟨rfl, List.nil_prefix⟩).isInfix, by simp,
+      by simp [maxSubArrayWrong]⟩
+
+theorem weak_spec_insufficient :
+    ∃ impl : List Int → Int,
+      (∀ nums, nums ≠ [] → WeakSpec nums (impl nums)) ∧
+      ¬ ∀ nums, nums ≠ [] → MaxSubarraySpec nums (impl nums) := by
+  refine ⟨maxSubArrayWrong, maxSubArrayWrong_weak, fun h => ?_⟩
+  have := (h [1, 2] (by simp)).2 [1, 2] (List.infix_refl _) (by simp)
+  simp [maxSubArrayWrong] at this
 
 end LeanPortfolio.LeetCode.MaxSubarray
