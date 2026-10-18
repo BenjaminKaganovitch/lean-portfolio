@@ -17,6 +17,10 @@ def MaxSubarraySpec (nums : List Int) (r : Int) : Prop :=
 def WeakSpec (nums : List Int) (r : Int) : Prop :=
   ∃ s, s <:+: nums ∧ s ≠ [] ∧ s.sum = r
 
+theorem MaxSubarraySpec.weak {nums : List Int} {r : Int} (h : MaxSubarraySpec nums r) :
+    WeakSpec nums r :=
+  h.1
+
 def kadane (x : Int) : List Int → Int × Int
   | [] => (x, x)
   | y :: ys =>

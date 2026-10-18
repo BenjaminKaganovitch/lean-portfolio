@@ -19,6 +19,10 @@ def BinarySearchSpec (a : Array Int) (target : Int) (r : Option ℕ) : Prop :=
 def WeakSpec (a : Array Int) (target : Int) (r : Option ℕ) : Prop :=
   ∀ i, r = some i → i < a.size ∧ a[i]! = target
 
+theorem BinarySearchSpec.weak {a : Array Int} {target : Int} {r : Option ℕ}
+    (h : BinarySearchSpec a target r) : WeakSpec a target r :=
+  h.1
+
 /-- Search the half-open window `[lo, hi)`. -/
 def search (a : Array Int) (target : Int) (lo hi : ℕ) : Option ℕ :=
   if lo < hi then

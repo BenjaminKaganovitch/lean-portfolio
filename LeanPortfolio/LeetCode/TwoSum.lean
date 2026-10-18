@@ -16,6 +16,12 @@ def WeakSpec (nums : List Int) (target : Int) (r : Option (ℕ × ℕ)) : Prop :
   (∀ i j, r = some (i, j) → i ≤ j ∧ j < nums.length ∧ nums[i]! + nums[j]! = target) ∧
   (r = none → ∀ i j, i < j → j < nums.length → nums[i]! + nums[j]! ≠ target)
 
+theorem TwoSumSpec.weak {nums : List Int} {target : Int} {r : Option (ℕ × ℕ)}
+    (h : TwoSumSpec nums target r) : WeakSpec nums target r := by
+  refine ⟨fun i j hr => ?_, h.2⟩
+  obtain ⟨hij, hj, hs⟩ := h.1 i j hr
+  exact ⟨by omega, hj, hs⟩
+
 def pairs (n : ℕ) : List (ℕ × ℕ) :=
   (List.range n).flatMap fun j => (List.range j).map fun i => (i, j)
 
