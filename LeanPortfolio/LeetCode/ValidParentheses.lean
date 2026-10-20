@@ -35,6 +35,12 @@ inductive Balanced : List Char → Prop
 def ValidSpec (l : List Char) (r : Bool) : Prop :=
   r = true ↔ Balanced l
 
+def CountsMatch (l : List Char) : Prop :=
+  l.count '(' = l.count ')' ∧ l.count '[' = l.count ']' ∧ l.count '{' = l.count '}'
+
+def WeakSpec (l : List Char) (r : Bool) : Prop :=
+  (r = true → CountsMatch l) ∧ (Balanced l → r = true)
+
 /-- `stack` holds the unmatched opening brackets, most recent first. -/
 def scan : List Char → List Char → Bool
   | [], stack => stack.isEmpty
@@ -63,6 +69,19 @@ def isValid (s : String) : Bool := isValidList s.toList
 
 lemma Balanced.pair {o c : Char} (h : IsPair o c) : Balanced [o, c] := by
   simpa using Balanced.wrap h Balanced.nil
+
+lemma Balanced.countsMatch {l : List Char} (h : Balanced l) : CountsMatch l := by
+  induction h with
+  | nil => simp [CountsMatch]
+  | wrap hp _ ih =>
+    unfold IsPair at hp
+    unfold CountsMatch at ih ⊢
+    rcases hp with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ <;>
+      simp [List.count_append] <;> omega
+  | append _ _ ih₁ ih₂ =>
+    unfold CountsMatch at ih₁ ih₂ ⊢
+    simp only [List.count_append]
+    omega
 
 /-- A valid prefix is consumed by the scan without touching the stack. -/
 lemma scan_balanced_append {l : List Char} (h : Balanced l) :
@@ -94,22 +113,16 @@ lemma Balanced.insert {o c : Char} (hp : IsPair o c) {w : List Char} (h : Balanc
     | cons a A' =>
       simp only [List.cons_append, List.cons.injEq] at hAB
       obtain ⟨rfl, hl'⟩ := hAB
-      by_cases hB : B = []
-      · subst hB
-        simp only [List.append_nil] at hl'
+      rcases List.eq_nil_or_concat B with rfl | ⟨B', d, rfl⟩
+      · simp only [List.append_nil] at hl'
         subst hl'
         simpa using Balanced.append (Balanced.wrap hp' hl) (Balanced.pair hp)
-      · rcases List.eq_nil_or_concat B with rfl | ⟨B', d, hB'⟩
-        · contradiction
-        · rw [hB', List.concat_eq_append, ← List.append_assoc] at hl'
-          obtain ⟨hl'', hcd⟩ := List.append_inj' hl' rfl
-          simp only [List.cons.injEq, and_true] at hcd
-          subst hcd
-          have hinner := Balanced.wrap hp' (ih A' B' hl'')
-          have hwrap : (o' :: A') ++ o :: c :: (B' ++ [c']) =
-              o' :: ((A' ++ o :: c :: B') ++ [c']) := by simp
-          rw [hB', List.concat_eq_append, hwrap]
-          exact hinner
+      · rw [List.concat_eq_append, ← List.append_assoc] at hl'
+        obtain ⟨hl'', hcd⟩ := List.append_inj' hl' rfl
+        simp only [List.cons.injEq, and_true] at hcd
+        subst hcd
+        have := Balanced.wrap hp' (ih A' B' hl'')
+        simpa using this
   | @append l₁ l₂ h₁ h₂ ih₁ ih₂ =>
     intro A B hAB
     rcases List.append_eq_append_iff.mp hAB with ⟨a', rfl, rfl⟩ | ⟨c', rfl, rfl⟩
@@ -151,6 +164,9 @@ theorem isValidList_spec (l : List Char) : ValidSpec l (isValidList l) := by
 theorem isValid_iff (s : String) : isValid s = true ↔ Balanced s.toList :=
   isValidList_spec s.toList
 
+theorem ValidSpec.weak {l : List Char} {r : Bool} (h : ValidSpec l r) : WeakSpec l r :=
+  ⟨fun hr => (h.mp hr).countsMatch, h.mpr⟩
+
 lemma rejects_mismatch : isValidList ['(', ']'] = false := by decide
 
 lemma not_balanced_mismatch : ¬ Balanced ['(', ']'] := by
@@ -160,5 +176,31 @@ lemma not_balanced_mismatch : ¬ Balanced ['(', ']'] := by
   decide
 
 lemma accepts_nested : isValidList ['(', '[', ']', '{', '}', ')'] = true := by decide
+
+def countCheck (l : List Char) : Bool :=
+  l.count '(' == l.count ')' && l.count '[' == l.count ']' && l.count '{' == l.count '}'
+
+lemma countCheck_iff (l : List Char) : countCheck l = true ↔ CountsMatch l := by
+  simp [countCheck, CountsMatch, and_assoc]
+
+theorem countCheck_weak (l : List Char) : WeakSpec l (countCheck l) :=
+  ⟨(countCheck_iff l).mp, fun h => (countCheck_iff l).mpr h.countsMatch⟩
+
+lemma countCheck_crossed : countCheck ['(', '[', ')', ']'] = true := by decide
+
+lemma not_balanced_crossed : ¬ Balanced ['(', '[', ')', ']'] := by
+  intro h
+  have := (isValidList_spec _).mpr h
+  revert this
+  decide
+
+theorem weak_spec_insufficient :
+    ∃ impl : List Char → Bool,
+      (∀ l, WeakSpec l (impl l)) ∧ ¬ ∀ l, ValidSpec l (impl l) := by
+  refine ⟨countCheck, countCheck_weak, fun h => ?_⟩
+  have hb : Balanced [')', '('] := (h [')', '(']).mp (by decide)
+  have := (isValidList_spec [')', '(']).mpr hb
+  revert this
+  decide
 
 end LeanPortfolio.LeetCode.ValidParentheses
