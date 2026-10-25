@@ -1,7 +1,7 @@
 import Mathlib
 
 /-!
-# If `n ∣ 2 ^ n - 1` then `n = 1`
+# If `1 ≤ n` and `n ∣ 2 ^ n - 1` then `n = 1`
 
 The informal claim: the only positive integer `n` with `n ∣ 2^n - 1` is `n = 1`.
 

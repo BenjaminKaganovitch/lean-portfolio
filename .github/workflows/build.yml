@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           lake build 2>&1 | tee build.log
-          if grep -q "declaration uses 'sorry'" build.log; then
+          if grep -q "declaration uses" build.log; then
             echo "error: build reports sorry"
             exit 1
           fi
