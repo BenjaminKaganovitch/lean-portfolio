@@ -5,6 +5,8 @@ import Mathlib
 
 The informal claim: if `α` is a finite partial order and `f : α → α` is a monotone
 bijection, then `f a ≤ f b` implies `a ≤ b`, so `f` is an order isomorphism.
+`le_of_map_le` is the main theorem, `map_le_map_iff` the resulting iff, and
+`orderIsoOfMonotoneBijective` packages `f` as an `α ≃o α`.
 
 ## Design notes
 
@@ -12,7 +14,9 @@ bijection, then `f a ≤ f b` implies `a ≤ b`, so `f` is an order isomorphism.
   `SparseInt`: the integers, where the only relations besides `a ≤ a` are `2k ≤ 2k + 1`
   for `k ≥ 0`. The shift `n ↦ n + 2` is a monotone bijection, it sends `-2, -1` to
   `0, 1`, and `0 ≤ 1` holds while `-2 ≤ -1` does not. The shift creates relations
-  without destroying any, which only works because there are infinitely many of them.
+  without destroying any. `le_of_map_le` shows this cannot happen on a finite poset.
+* `naive_false` quantifies over `α : Type`. The counterexample lives in `Type`, and one
+  counterexample there is enough to refute the naive claim.
 * `SparseInt` is a type synonym (`def SparseInt : Type := ℤ`) with explicit `toInt` and
   `ofInt`, so its `PartialOrder` never meets the usual order on `ℤ`. Statements about
   `SparseInt` go through `toInt`, which makes the arithmetic visible to `omega`.
@@ -120,7 +124,24 @@ theorem le_of_map_le {α : Type*} [PartialOrder α] [Finite α] {f : α → α}
   rw [← hb.1 hp.1, ← hb.1 hp.2]
   exact hxy
 
+theorem map_le_map_iff {α : Type*} [PartialOrder α] [Finite α] {f : α → α}
+    (hf : Monotone f) (hb : Function.Bijective f) {a b : α} : f a ≤ f b ↔ a ≤ b :=
+  ⟨le_of_map_le hf hb, fun h => hf h⟩
+
+/-- A monotone bijection of a finite poset, as an order isomorphism. -/
+noncomputable def orderIsoOfMonotoneBijective {α : Type*} [PartialOrder α] [Finite α]
+    {f : α → α} (hf : Monotone f) (hb : Function.Bijective f) : α ≃o α where
+  toEquiv := Equiv.ofBijective f hb
+  map_rel_iff' := map_le_map_iff hf hb
+
+@[simp] lemma coe_orderIsoOfMonotoneBijective {α : Type*} [PartialOrder α] [Finite α]
+    {f : α → α} (hf : Monotone f) (hb : Function.Bijective f) :
+    ⇑(orderIsoOfMonotoneBijective hf hb) = f :=
+  rfl
+
 end LeanPortfolio.OrderTheory
 
 #print axioms LeanPortfolio.OrderTheory.naive_false
 #print axioms LeanPortfolio.OrderTheory.le_of_map_le
+#print axioms LeanPortfolio.OrderTheory.map_le_map_iff
+#print axioms LeanPortfolio.OrderTheory.orderIsoOfMonotoneBijective

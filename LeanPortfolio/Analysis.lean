@@ -8,10 +8,13 @@ is constant.
 
 ## Design notes
 
-* The naive version over `ℤ` (with `f : ℤ → ℝ`) is false. `naive_false` refutes it with
-  `f n = n`: for integers `|k| ≤ k ^ 2`, so the bound holds, but `f 0 ≠ f 1`. The real
-  proof needs midpoints, and `ℤ` has none. The domain is the whole content of the
-  statement, not a detail.
+* The naive version forgets the parentheses: `|f x - f y| ≤ x - y ^ 2`. Lean parses the
+  right side as `x - (y ^ 2)`. `naive_vacuous` states the resulting claim. It compiles and
+  is proven, and it says nothing about `f`: its proof only refutes the hypothesis.
+  `naive_hyp_unsat` shows why: at `x = 0`, `y = 1` the hypothesis reads
+  `|f 0 - f 1| ≤ -1`, so no `f` satisfies it.
+* The argument needs midpoints, so it works over `ℚ` or `ℝ` but not `ℤ` (where `f n = n`
+  satisfies the bound), and it needs the exponent above 1.
 * Dropping the absolute value still gives a true statement. If `f x - f y ≤ (x - y) ^ 2`
   for all `x, y`, swapping `x` and `y` gives `f y - f x ≤ (x - y) ^ 2`, and the two
   together are the hypothesis here. So the weaker-looking version is equivalent, not a
@@ -20,27 +23,22 @@ is constant.
   `x, y`. The step splits at the midpoint `m = (x + y) / 2`: the two halves contribute
   `2 * ((x - y) / 2) ^ 2 * (1 / 2) ^ k = (x - y) ^ 2 * (1 / 2) ^ (k + 1)`. Letting
   `k → ∞` forces `|f x - f y| ≤ 0`. This avoids derivatives and the mean value theorem.
-* Prior formalizations: none found in Mathlib (grep, Loogle, LeanSearch). No public
-  formalization was consulted.
+* Prior formalizations: none found in Mathlib (grep, Loogle, LeanSearch). Other public
+  repositories were not searched. No public formalization was consulted.
 -/
 
 namespace LeanPortfolio.Analysis
 
-/-- Over `ℤ` the statement fails: `f n = n` satisfies the bound. -/
-theorem naive_false :
-    ¬ ∀ f : ℤ → ℝ, (∀ x y : ℤ, |f x - f y| ≤ ((x - y : ℤ) : ℝ) ^ 2) → ∀ x y, f x = f y := by
-  intro h
-  have key : ∀ k : ℤ, |k| ≤ k ^ 2 := by
-    intro k
-    rcases eq_or_ne k 0 with rfl | hk
-    · simp
-    · have h1 : 1 ≤ |k| := Int.one_le_abs hk
-      nlinarith [abs_mul_abs_self k]
-  have := h (fun n => (n : ℝ)) (fun x y => by
-    have := key (x - y)
-    push_cast
-    exact_mod_cast this) 0 1
-  norm_num at this
+/-- With `x - y ^ 2` (that is, `x - (y ^ 2)`) the hypothesis has no solutions. -/
+theorem naive_hyp_unsat : ¬ ∃ f : ℝ → ℝ, ∀ x y, |f x - f y| ≤ x - y ^ 2 := by
+  rintro ⟨f, hf⟩
+  linarith [hf 0 1, abs_nonneg (f 0 - f 1)]
+
+/-- The misparsed statement. It is true, but only because its hypothesis is never met. -/
+theorem naive_vacuous :
+    ∀ f : ℝ → ℝ, (∀ x y, |f x - f y| ≤ x - y ^ 2) → ∀ x y, f x = f y := by
+  intro f hf
+  exact absurd ⟨f, hf⟩ naive_hyp_unsat
 
 /-- The one-sided bound already gives the two-sided one, by swapping `x` and `y`. -/
 theorem abs_sub_le_sq_of_sub_le_sq {f : ℝ → ℝ} (h : ∀ x y, f x - f y ≤ (x - y) ^ 2)
@@ -78,6 +76,7 @@ theorem eq_of_abs_sub_le_sq {f : ℝ → ℝ} (h : ∀ x y, |f x - f y| ≤ (x -
 
 end LeanPortfolio.Analysis
 
-#print axioms LeanPortfolio.Analysis.naive_false
+#print axioms LeanPortfolio.Analysis.naive_hyp_unsat
+#print axioms LeanPortfolio.Analysis.naive_vacuous
 #print axioms LeanPortfolio.Analysis.abs_sub_le_sq_of_sub_le_sq
 #print axioms LeanPortfolio.Analysis.eq_of_abs_sub_le_sq

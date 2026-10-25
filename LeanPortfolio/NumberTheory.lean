@@ -17,7 +17,8 @@ The informal claim: the only positive integer `n` with `n ∣ 2^n - 1` is `n = 1
   `n` that is at least 2 and below `p`, contradicting minimality of `p`. So `d = 1`, which
   means `2 = 1` in `ZMod p`, which is impossible.
 * Prior formalizations: none found in Mathlib (grep and Loogle) or compfiles (commit
-  `1745e6c`). The proof here was written without consulting any existing one.
+  `1745e6c`). Other public repositories were not searched. The proof here was written
+  without consulting any existing one.
 -/
 
 namespace LeanPortfolio.NumberTheory
