@@ -26,8 +26,8 @@ bijection, then `f a ≤ f b` implies `a ≤ b`, so `f` is an order isomorphism.
   with `a' ≤ b'`, and injectivity of `f` gives `a' = a`, `b' = b`.
 * Only injectivity of `f` is used. On a finite type that is equivalent to bijectivity, so
   the statement keeps `Function.Bijective` to match the informal claim.
-* Prior formalizations: none found in Mathlib (grep, Loogle, LeanSearch). No public
-  formalization was consulted.
+* Prior formalizations: none found in Mathlib (grep, Loogle, LeanSearch). Other public
+  repositories were not searched. No public formalization was consulted.
 -/
 
 namespace LeanPortfolio.OrderTheory
