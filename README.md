@@ -1,5 +1,7 @@
 # Lean portfolio
 
+[![build](https://github.com/BenjaminKaganovitch/lean-portfolio/actions/workflows/build.yml/badge.svg)](https://github.com/BenjaminKaganovitch/lean-portfolio/actions/workflows/build.yml)
+
 Three small Lean 4 formalizations against Mathlib. Each file states an informal claim,
 gives a naive formalization that is wrong or vacuous, proves that it is, and then proves
 the corrected theorem. A module docstring in each file explains the design decisions.
@@ -30,7 +32,7 @@ Each file ends with `#print axioms` for its theorems. The output lists only `pro
 Install [elan](https://github.com/leanprover/elan), then:
 
 ```
-git clone <this repo>
+git clone https://github.com/BenjaminKaganovitch/lean-portfolio.git
 cd lean-portfolio
 lake exe cache get
 lake build
