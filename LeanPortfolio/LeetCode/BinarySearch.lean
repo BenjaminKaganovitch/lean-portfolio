@@ -9,7 +9,8 @@ Given a sorted `a : Array Int` and `target : Int`, return an index `i` with
 ## Design notes
 
 * `BinarySearchSpec` is the full spec. `some i` must be an in-range index holding
-  `target`, and `none` must mean `target` occurs nowhere in the array.
+  `target`, and `none` must mean `target` occurs nowhere in the array. Every `a[i]!` in
+  the specs sits next to a bound `i < a.size`, so `!` never hits its default.
 * `WeakSpec` keeps only the first half: "if you return an index, it is correct". The
   constant `none` meets it on every input, since it never returns an index.
   `weak_spec_insufficient` proves this and shows the full spec rejects it on `#[1]`,
@@ -25,8 +26,9 @@ Given a sorted `a : Array Int` and `target : Int`, return an index `i` with
   natural numbers, so the classic overflow in `lo + hi` cannot happen here. That is a
   difference between this model and fixed-width code, not something the proof covers.
   Termination is by `hi - lo`.
-* Prior work: VERINA (`verina_basic_51`) has a related insertion-index task with its
-  proof left as `sorry`. Nothing for this problem was found in human-eval-lean or CLEVER.
+* Prior work: VERINA (`verina_basic_51`) and AlgoVeri (`binary_search`) have related
+  lower-bound tasks with their proofs left as `sorry`. Nothing for this problem was found
+  in human-eval-lean or CLEVER.
   Only task descriptions were read. Other public repositories were not searched.
 -/
 
