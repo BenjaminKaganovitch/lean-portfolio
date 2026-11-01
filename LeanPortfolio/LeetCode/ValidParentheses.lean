@@ -3,40 +3,34 @@ import Mathlib
 /-!
 # Valid Parentheses (LeetCode 20)
 
-Given a string of the characters `()[]{}`, decide whether every bracket is closed by a
-bracket of the same type, in the correct order.
+Decide whether every bracket in a string over `()[]{}` is closed by one of the same type,
+in the right order.
 
 ## Design notes
 
-* `Balanced` is the grammar of valid strings: the empty string, `o w c` for a matching
-  pair `o, c` and a valid `w`, and the concatenation of two valid strings. `IsPair` lists
-  the three pairs, so `(]` is not valid: `rejects_mismatch` checks the implementation on
-  it and `not_balanced_mismatch` derives that it is not in the grammar. A spec that
-  treated all brackets as one type would accept it.
-* `ValidSpec l r` says `r = true ↔ Balanced l`. `isValidList` is the usual stack scan,
-  and `isValidList_spec` proves both directions. The hard direction uses
-  `Balanced.insert`: putting a matching pair anywhere into a valid string keeps it valid.
-* `WeakSpec` asks only that accepted strings have matching counts of each bracket type,
-  plus that valid strings are accepted. `countCheck` compares the counts and meets it on
-  every input. It accepts `)(` and `([)]`, neither of which is valid (`countCheck_crossed`
-  and `not_balanced_crossed` cover the second).
-  `weak_spec_insufficient` proves this using `)(`.
-* `ValidSpec.weak` shows every correct result also meets `WeakSpec`, using
-  `Balanced.countsMatch`.
-* LeetCode inputs contain only bracket characters. Any other character is treated as a
-  closing bracket that matches nothing, so the scan rejects it, and the grammar has no
-  rule that produces it.
-* `isValid` on `String` goes through `String.toList`. The proofs are about `List Char`.
+* `Balanced` is the grammar of valid strings. Since `IsPair` has three typed pairs, `(]`
+  is rejected (`rejects_mismatch`) and lies outside the grammar
+  (`not_balanced_mismatch`). A one-type spec would accept it.
+* `isValidList` is the usual stack scan, and `isValidList_spec` proves both directions.
+  The hard direction rests on `Balanced.insert`: a matching pair inserted anywhere into a
+  valid string leaves it valid.
+* Weak-spec trap: `WeakSpec` still requires valid strings to be accepted, but asks
+  accepted strings only to have matching counts of each type. `countCheck` meets it on
+  every input and accepts `)(` and `([)]`, both invalid. `weak_spec_insufficient` uses
+  `)(`; `countCheck_crossed` and `not_balanced_crossed` cover `([)]`. Every correct result
+  meets `WeakSpec` (`ValidSpec.weak`, via `Balanced.countsMatch`).
+* LeetCode inputs contain only brackets. Any other character takes the closing branch and
+  matches nothing, so the scan rejects it, and no grammar rule produces it.
+* `isValid` on `String` goes through `String.toList`; the proofs are about `List Char`.
 * Prior work: human-eval-lean proves a one-type version (`Common/Brackets.lean`, used by
   HumanEval 56 and 61), which cannot tell `(]` from `()`. AlgoVeri (`bracket_matching`)
   and CLEVER state related tasks with no completed proofs. Only task descriptions,
-  declaration names and file statistics were read, no proofs. Other public repositories
-  were not searched.
+  declaration names and file statistics were read; other public repositories were not
+  searched.
 -/
 
 namespace LeanPortfolio.LeetCode.ValidParentheses
 
-/-- The three bracket pairs. -/
 def IsPair (o c : Char) : Prop :=
   (o = '(' ∧ c = ')') ∨ (o = '[' ∧ c = ']') ∨ (o = '{' ∧ c = '}')
 
@@ -55,25 +49,21 @@ lemma IsPair.not_isOpen {o c : Char} (h : IsPair o c) : ¬ IsOpen c := by
   unfold IsPair at h; unfold IsOpen
   rcases h with ⟨-, rfl⟩ | ⟨-, rfl⟩ | ⟨-, rfl⟩ <;> decide
 
-/-- Valid bracket strings. -/
 inductive Balanced : List Char → Prop
   | nil : Balanced []
   | wrap {o c : Char} {l : List Char} : IsPair o c → Balanced l → Balanced (o :: (l ++ [c]))
   | append {l₁ l₂ : List Char} : Balanced l₁ → Balanced l₂ → Balanced (l₁ ++ l₂)
 
-/-- Full spec: accept exactly the valid strings. -/
 def ValidSpec (l : List Char) (r : Bool) : Prop :=
   r = true ↔ Balanced l
 
-/-- Same number of opening and closing brackets of each type. -/
 def CountsMatch (l : List Char) : Prop :=
   l.count '(' = l.count ')' ∧ l.count '[' = l.count ']' ∧ l.count '{' = l.count '}'
 
-/-- Weak spec: accepted strings have matching counts, and valid strings are accepted. -/
 def WeakSpec (l : List Char) (r : Bool) : Prop :=
   (r = true → CountsMatch l) ∧ (Balanced l → r = true)
 
-/-- Stack scan. `stack` holds the unmatched opening brackets, most recent first. -/
+/-- `stack` holds the unmatched opening brackets, most recent first. -/
 def scan : List Char → List Char → Bool
   | [], stack => stack.isEmpty
   | c :: cs, stack =>
@@ -128,7 +118,6 @@ lemma scan_balanced_append {l : List Char} (h : Balanced l) :
     intro rest stack
     rw [List.append_assoc, ih₁, ih₂]
 
-/-- Inserting a matching pair anywhere into a valid string keeps it valid. -/
 lemma Balanced.insert {o c : Char} (hp : IsPair o c) {w : List Char} (h : Balanced w) :
     ∀ A B, w = A ++ B → Balanced (A ++ o :: c :: B) := by
   induction h with
@@ -162,7 +151,7 @@ lemma Balanced.insert {o c : Char} (hp : IsPair o c) {w : List Char} (h : Balanc
     · simpa using Balanced.append h₁ (ih₂ a' B rfl)
     · simpa using Balanced.append (ih₁ A c' rfl) h₂
 
-/-- If the scan accepts, the consumed opening brackets plus the rest form a valid string. -/
+/-- If the scan accepts, the pending openers followed by the rest form a valid string. -/
 lemma balanced_of_scan :
     ∀ (l stack : List Char), scan l stack = true → Balanced (stack.reverse ++ l) := by
   intro l
@@ -200,7 +189,6 @@ theorem isValid_iff (s : String) : isValid s = true ↔ Balanced s.toList :=
 theorem ValidSpec.weak {l : List Char} {r : Bool} (h : ValidSpec l r) : WeakSpec l r :=
   ⟨fun hr => (h.mp hr).countsMatch, h.mpr⟩
 
-/-- The three types matter: a mismatched pair is rejected. -/
 lemma rejects_mismatch : isValidList ['(', ']'] = false := by decide
 
 lemma not_balanced_mismatch : ¬ Balanced ['(', ']'] := by
@@ -211,7 +199,6 @@ lemma not_balanced_mismatch : ¬ Balanced ['(', ']'] := by
 
 lemma accepts_nested : isValidList ['(', '[', ']', '{', '}', ')'] = true := by decide
 
-/-- Wrong: only compares counts. -/
 def countCheck (l : List Char) : Bool :=
   l.count '(' == l.count ')' && l.count '[' == l.count ']' && l.count '{' == l.count '}'
 
@@ -229,7 +216,6 @@ lemma not_balanced_crossed : ¬ Balanced ['(', '[', ')', ']'] := by
   revert this
   decide
 
-/-- `WeakSpec` admits an implementation that violates the full spec. -/
 theorem weak_spec_insufficient :
     ∃ impl : List Char → Bool,
       (∀ l, WeakSpec l (impl l)) ∧ ¬ ∀ l, ValidSpec l (impl l) := by

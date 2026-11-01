@@ -3,47 +3,40 @@ import Mathlib
 /-!
 # Maximum Subarray (LeetCode 53)
 
-Given a nonempty `nums : List Int`, return the largest sum of a nonempty contiguous
-subarray.
+Return the largest sum of a nonempty contiguous subarray of a nonempty `nums : List Int`.
 
 ## Design notes
 
-* A subarray is a nonempty infix: `s <:+: nums` and `s ≠ []`. Using `List.IsInfix`
-  keeps "contiguous" in the statement. Writing `s <+ nums` (`List.Sublist`) instead would
-  allow gaps and change the problem.
-* `MaxSubarraySpec nums r` says `r` is the sum of some nonempty infix and no nonempty
-  infix has a larger sum.
-* `WeakSpec` keeps only the first half: "`r` is the sum of some subarray". The wrong
-  implementation `maxSubArrayWrong` returns the first element, which is the sum of the
-  subarray `[x]`, so it meets `WeakSpec` on every nonempty input. On `[1, 2]` it returns
-  `1` while the answer is `3`. `weak_spec_insufficient` proves both facts.
-* `MaxSubarraySpec.weak` shows every correct result also meets `WeakSpec`.
-* The implementation is Kadane's recurrence. `kadane x l` handles the list `x :: l` and
-  returns two numbers: the best sum of a nonempty prefix, and the best sum of a nonempty
-  infix. The step is `best prefix of x :: l = max x (x + best prefix of l)`, the "best
-  sum starting here" recurrence. It mirrors the usual left-to-right "best sum ending
-  here" loop. The recursion follows the
-  list structure, so it is linear but not tail recursive.
+* A subarray is a nonempty infix (`s <:+: nums`, `s ≠ []`). `List.IsInfix` keeps
+  contiguity in the statement; `s <+ nums` (`List.Sublist`) would allow gaps and change
+  the problem.
+* Weak-spec trap: `WeakSpec` asks only that `r` be the sum of some subarray.
+  `maxSubArrayWrong` returns the first element, the sum of `[x]`, so it meets `WeakSpec`
+  on every nonempty input. On `[1, 2]` it returns `1` where the answer is `3`
+  (`weak_spec_insufficient`). Every correct result meets `WeakSpec`
+  (`MaxSubarraySpec.weak`).
+* `kadane x l` works on `x :: l` and returns the best nonempty prefix sum and the best
+  nonempty infix sum. Its step, `best prefix of x :: l = max x (x + best prefix of l)`,
+  is the "best sum starting here" recurrence, the mirror of the usual left-to-right "best
+  sum ending here" loop. It follows the list structure, so it is linear but not tail
+  recursive.
 * LeetCode guarantees at least one element. `maxSubArray [] = 0` is a placeholder, and
-  the spec theorem assumes `nums ≠ []`.
+  `maxSubArray_spec` assumes `nums ≠ []`.
 * Prior work: VERINA (`verina_advanced_45`, `verina_advanced_75`) and AlgoVeri
-  (`maximum_subarray_sum`) state this problem with no completed proofs.
-  human-eval-lean proves the minimum version (HumanEval 114), a different problem. Only
-  task descriptions and file statistics were read, no proofs. Other public repositories
-  were not searched.
+  (`maximum_subarray_sum`) state the problem with no completed proofs. human-eval-lean
+  proves the minimum version (HumanEval 114), a different problem. Only task
+  descriptions and file statistics were read; other public repositories were not
+  searched.
 -/
 
 namespace LeanPortfolio.LeetCode.MaxSubarray
 
-/-- `v` is the largest sum over nonempty lists satisfying `P`, and is attained. -/
 def IsMaxOver (P : List Int → Prop) (v : Int) : Prop :=
   (∃ s, P s ∧ s ≠ [] ∧ s.sum = v) ∧ ∀ s, P s → s ≠ [] → s.sum ≤ v
 
-/-- Full spec: `r` is the largest sum of a nonempty contiguous subarray. -/
 def MaxSubarraySpec (nums : List Int) (r : Int) : Prop :=
   IsMaxOver (· <:+: nums) r
 
-/-- Weak spec: `r` is the sum of some nonempty contiguous subarray. -/
 def WeakSpec (nums : List Int) (r : Int) : Prop :=
   ∃ s, s <:+: nums ∧ s ≠ [] ∧ s.sum = r
 
@@ -51,7 +44,6 @@ theorem MaxSubarraySpec.weak {nums : List Int} {r : Int} (h : MaxSubarraySpec nu
     WeakSpec nums r :=
   h.1
 
-/-- Kadane on `x :: l`: (best nonempty prefix sum, best nonempty infix sum). -/
 def kadane (x : Int) : List Int → Int × Int
   | [] => (x, x)
   | y :: ys =>
@@ -72,7 +64,6 @@ theorem kadane_spec (x : Int) (l : List Int) :
     IsMaxOver (· <+: x :: l) (kadane x l).1 ∧ IsMaxOver (· <:+: x :: l) (kadane x l).2 := by
   induction l generalizing x with
   | nil =>
-    -- the only nonempty infix of `[x]` is `[x]`
     have key : ∀ s, s <:+: [x] → s ≠ [] → s = [x] := by
       intro s hs hne
       rcases List.infix_cons_iff.mp hs with h | h
@@ -95,7 +86,6 @@ theorem kadane_spec (x : Int) (l : List Int) :
     rw [hk]
     set c := (kadane y ys).1
     set b := (kadane y ys).2
-    -- best prefix of `x :: y :: ys`
     have pre : IsMaxOver (· <+: x :: y :: ys) (max x (x + c)) := by
       constructor
       · rcases le_total (x + c) x with h | h
@@ -127,7 +117,6 @@ theorem maxSubArray_spec (nums : List Int) (h : nums ≠ []) :
   | nil => exact absurd rfl h
   | cons x xs => exact (kadane_spec x xs).2
 
-/-- Wrong: returns the first element. -/
 def maxSubArrayWrong : List Int → Int
   | [] => 0
   | x :: _ => x
@@ -140,7 +129,6 @@ theorem maxSubArrayWrong_weak (nums : List Int) (h : nums ≠ []) :
     exact ⟨[x], (List.cons_prefix_cons.mpr ⟨rfl, List.nil_prefix⟩).isInfix, by simp,
       by simp [maxSubArrayWrong]⟩
 
-/-- `WeakSpec` admits an implementation that violates the full spec. -/
 theorem weak_spec_insufficient :
     ∃ impl : List Int → Int,
       (∀ nums, nums ≠ [] → WeakSpec nums (impl nums)) ∧

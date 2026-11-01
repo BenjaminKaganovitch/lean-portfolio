@@ -3,50 +3,40 @@ import Mathlib
 /-!
 # Binary Search (LeetCode 704)
 
-Given a sorted `a : Array Int` and `target : Int`, return an index `i` with
-`a[i] = target`, or `none` if `target` does not occur.
+Given a sorted `a : Array Int`, return an index holding `target`, or `none` if it is
+absent.
 
 ## Design notes
 
-* `BinarySearchSpec` is the full spec. `some i` must be an in-range index holding
-  `target`, and `none` must mean `target` occurs nowhere in the array. Every `a[i]!` in
-  the specs is guarded by a bound, either `i < a.size` directly or `i ≤ j < a.size` in
-  `Sorted`, so `!` never hits its default.
-* `WeakSpec` keeps only the first half: "if you return an index, it is correct". The
-  constant `none` meets it on every input, since it never returns an index.
-  `weak_spec_insufficient` proves this and shows the full spec rejects it on `#[1]`,
-  target `1`. The missing half is completeness, and it is the half that needs the
-  sortedness hypothesis.
-* `WeakSpec` really is weaker: `BinarySearchSpec.weak` shows every correct result meets it.
-* Sortedness is non-decreasing order, so duplicates are allowed and any matching index
-  is accepted. LeetCode promises distinct values, which the proof does not need.
-* Soundness (`search_sound`) holds for any array. Completeness (`search_complete`) uses
-  `Sorted`, and `needs_sorted` shows it fails without it: on `#[2, 3, 1]` the search
-  misses `1`, so `needs_sorted_spec` shows the full spec fails there.
-* The search keeps a half-open window `[lo, hi)` and probes `(lo + hi) / 2`. Indices are
-  natural numbers, so the classic overflow in `lo + hi` cannot happen here. That is a
-  difference between this model and fixed-width code, not something the proof covers.
-  Termination is by `hi - lo`.
+* Every `a[i]!` in the specs is guarded by a bound, `i < a.size` directly or
+  `i ≤ j < a.size` in `Sorted`, so `!` never hits its default.
+* Weak-spec trap: `WeakSpec` keeps soundness and drops completeness, the half that needs
+  sortedness. The constant `none` meets it on every input and fails the full spec on
+  `#[1]`, target `1` (`weak_spec_insufficient`). Every correct result meets `WeakSpec`
+  (`BinarySearchSpec.weak`).
+* `Sorted` is non-decreasing, so duplicates are allowed and any matching index is
+  accepted. LeetCode promises distinct values; the proof does not need them.
+* `search_sound` holds for any array; `search_complete` needs `Sorted`. On `#[2, 3, 1]`
+  the search misses `1` (`needs_sorted`), so the full spec fails there
+  (`needs_sorted_spec`).
+* Indices are natural numbers, so the fixed-width overflow in `lo + hi` cannot happen in
+  this model, and the proof says nothing about it. Termination is by `hi - lo`.
 * The spec checks only input/output behavior. LeetCode's O(log n) requirement is not
   verified, and a linear scan would meet the same spec.
 * Prior work: VERINA (`verina_basic_51`) and AlgoVeri (`binary_search`) have related
-  lower-bound tasks with no completed proofs. Nothing for this problem was found
-  in human-eval-lean or CLEVER.
-  Only task descriptions were read. Other public repositories were not searched.
+  lower-bound tasks with no completed proofs. Nothing found in human-eval-lean or CLEVER.
+  Only task descriptions were read; other public repositories were not searched.
 -/
 
 namespace LeanPortfolio.LeetCode.BinarySearch
 
-/-- Non-decreasing order. -/
 def Sorted (a : Array Int) : Prop :=
   ∀ i j, i ≤ j → j < a.size → a[i]! ≤ a[j]!
 
-/-- Full spec: a returned index holds `target`, and `none` means `target` is absent. -/
 def BinarySearchSpec (a : Array Int) (target : Int) (r : Option ℕ) : Prop :=
   (∀ i, r = some i → i < a.size ∧ a[i]! = target) ∧
   (r = none → ∀ i, i < a.size → a[i]! ≠ target)
 
-/-- Weak spec: only soundness of a returned index. -/
 def WeakSpec (a : Array Int) (target : Int) (r : Option ℕ) : Prop :=
   ∀ i, r = some i → i < a.size ∧ a[i]! = target
 
@@ -109,7 +99,6 @@ theorem binarySearch_spec (a : Array Int) (target : Int) (hs : Sorted a) :
     exact ⟨this.1, this.2⟩
   · exact search_complete a target hs 0 a.size le_rfl h i (Nat.zero_le _) hi
 
-/-- Without sortedness the search can miss an element that is present. -/
 lemma needs_sorted : binarySearch #[2, 3, 1] 1 = none := by
   simp [binarySearch, search]
 
@@ -118,7 +107,6 @@ lemma needs_sorted_spec : ¬ BinarySearchSpec #[2, 3, 1] 1 (binarySearch #[2, 3,
   have := h.2 needs_sorted 2 (by simp)
   simp at this
 
-/-- Wrong: never finds anything. -/
 def searchWrong (_a : Array Int) (_target : Int) : Option ℕ := none
 
 lemma sorted_singleton (x : Int) : Sorted #[x] := by
@@ -128,7 +116,6 @@ lemma sorted_singleton (x : Int) : Sorted #[x] := by
   obtain rfl : i = 0 := by omega
   exact le_rfl
 
-/-- `WeakSpec` admits an implementation that violates the full spec. -/
 theorem weak_spec_insufficient :
     ∃ impl : Array Int → Int → Option ℕ,
       (∀ a target, Sorted a → WeakSpec a target (impl a target)) ∧

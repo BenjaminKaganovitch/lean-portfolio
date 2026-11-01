@@ -3,37 +3,32 @@ import Mathlib
 /-!
 # A monotone bijection of a finite poset is an order isomorphism
 
-The informal claim: if `α` is a finite partial order and `f : α → α` is a monotone
-bijection, then `f a ≤ f b` implies `a ≤ b`, so `f` is an order isomorphism.
-`le_of_map_le` is the main theorem, `map_le_map_iff` the resulting iff, and
-`orderIsoOfMonotoneBijective` packages `f` as an `α ≃o α`.
+Informal claim: if `α` is a finite partial order and `f : α → α` is a monotone
+bijection, then `f a ≤ f b` implies `a ≤ b`, so `f` is an order isomorphism. Main
+theorem `le_of_map_le`; `map_le_map_iff` gives the iff and `orderIsoOfMonotoneBijective`
+the `α ≃o α`.
 
 ## Design notes
 
-* The naive statement drops finiteness and is false. `naive_false` refutes it with
-  `SparseInt`: the integers, where the only relations besides `a ≤ a` are `2k ≤ 2k + 1`
-  for `k ≥ 0`. The shift `n ↦ n + 2` is a monotone bijection, it sends `-2, -1` to
-  `0, 1`, and `0 ≤ 1` holds while `-2 ≤ -1` does not. The shift creates relations
-  without destroying any. `le_of_map_le` shows this cannot happen on a finite poset.
-* `naive_false` quantifies over `α : Type`. The counterexample lives in `Type`, and one
-  counterexample there is enough to refute the naive claim.
-* `SparseInt` is a type synonym (`def SparseInt : Type := ℤ`) with explicit `toInt` and
-  `ofInt`, so its `PartialOrder` never meets the usual order on `ℤ`. Statements about
-  `SparseInt` go through `toInt`, which makes the arithmetic visible to `omega`.
-* Proof idea for the fixed theorem: `f` induces a map on the finite set of pairs
-  `{(a, b) | a ≤ b}`, sending `(a, b)` to `(f a, f b)`. This map is injective because `f`
-  is, so it is surjective. Then `(f a, f b)` with `f a ≤ f b` has a preimage `(a', b')`
-  with `a' ≤ b'`, and injectivity of `f` gives `a' = a`, `b' = b`.
-* Only injectivity of `f` is used. On a finite type that is equivalent to bijectivity, so
-  the statement keeps `Function.Bijective` to match the informal claim.
+* Without finiteness the claim is false (`naive_false`). In `SparseInt`, the integers
+  whose only relations besides `a ≤ a` are `2k ≤ 2k + 1` for `k ≥ 0`, the shift
+  `n ↦ n + 2` is a monotone bijection sending `-2, -1` to `0, 1`. It creates the relation
+  `0 ≤ 1` and destroys none, which `le_of_map_le` rules out on a finite poset.
+* `naive_false` quantifies over `α : Type`. One counterexample there refutes the naive
+  claim.
+* `SparseInt` is a type synonym with explicit `toInt` and `ofInt`, so its order never
+  meets the one on `ℤ`, and the arithmetic goes through `toInt` where `omega` can see it.
+* Proof: `f` acts injectively on the finite set `{(a, b) | a ≤ b}`, hence surjectively.
+  So `(f a, f b)` has a preimage `(a', b')` with `a' ≤ b'`, and injectivity of `f` gives
+  `a' = a`, `b' = b`.
+* Only injectivity is used. On a finite type it is equivalent to bijectivity, and the
+  statement keeps `Function.Bijective` to match the informal claim.
 * Prior formalizations: none found in Mathlib (grep, Loogle, LeanSearch). Other public
   repositories were not searched. No public formalization was consulted.
 -/
 
 namespace LeanPortfolio.OrderTheory
 
-/-- The integers with a sparse partial order: `a ≤ b` iff `a = b`, or `a = 2k` with
-`k ≥ 0` and `b = a + 1`. -/
 def SparseInt : Type := ℤ
 
 namespace SparseInt
@@ -66,7 +61,6 @@ lemma le_def {a b : SparseInt} :
     a ≤ b ↔ a = b ∨ (0 ≤ toInt a ∧ toInt a % 2 = 0 ∧ toInt b = toInt a + 1) :=
   Iff.rfl
 
-/-- Shift by two. -/
 def shift (n : SparseInt) : SparseInt := ofInt (toInt n + 2)
 
 lemma shift_monotone : Monotone shift := by
@@ -99,7 +93,6 @@ lemma not_le : ¬ ofInt (-2) ≤ ofInt (-1) := by
 
 end SparseInt
 
-/-- Without finiteness the statement fails on `SparseInt`. -/
 theorem naive_false :
     ¬ ∀ (α : Type) [PartialOrder α] (f : α → α), Monotone f → Function.Bijective f →
       ∀ a b, f a ≤ f b → a ≤ b := by
@@ -110,7 +103,6 @@ theorem naive_false :
 
 theorem le_of_map_le {α : Type*} [PartialOrder α] [Finite α] {f : α → α}
     (hf : Monotone f) (hb : Function.Bijective f) {a b : α} (h : f a ≤ f b) : a ≤ b := by
-  -- `f` acting on the finite set of related pairs
   let g : {p : α × α // p.1 ≤ p.2} → {p : α × α // p.1 ≤ p.2} :=
     fun p => ⟨(f p.1.1, f p.1.2), hf p.2⟩
   have hg : Function.Injective g := by
@@ -128,7 +120,6 @@ theorem map_le_map_iff {α : Type*} [PartialOrder α] [Finite α] {f : α → α
     (hf : Monotone f) (hb : Function.Bijective f) {a b : α} : f a ≤ f b ↔ a ≤ b :=
   ⟨le_of_map_le hf hb, fun h => hf h⟩
 
-/-- A monotone bijection of a finite poset, as an order isomorphism. -/
 noncomputable def orderIsoOfMonotoneBijective {α : Type*} [PartialOrder α] [Finite α]
     {f : α → α} (hf : Monotone f) (hb : Function.Bijective f) : α ≃o α where
   toEquiv := Equiv.ofBijective f hb

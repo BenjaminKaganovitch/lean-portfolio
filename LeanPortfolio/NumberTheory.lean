@@ -3,27 +3,24 @@ import Mathlib
 /-!
 # If `1 ≤ n` and `n ∣ 2 ^ n - 1` then `n = 1`
 
-The informal claim: the only positive integer `n` with `n ∣ 2^n - 1` is `n = 1`.
+Informal claim: the only positive integer `n` with `n ∣ 2^n - 1` is `1`.
 
 ## Design notes
 
-* The naive statement `∀ n : ℕ, n ∣ 2 ^ n - 1 → n = 1` is false. At `n = 0` we get
-  `2 ^ 0 - 1 = 0` and `0 ∣ 0`, but `0 ≠ 1`. `naive_false` proves this. The fix is the
-  hypothesis `1 ≤ n`, which is what "positive integer" meant all along.
-* Truncated subtraction on `ℕ` is harmless here because `1 ≤ 2 ^ n`, so `2 ^ n - 1` is
-  the real difference. The proof moves to `ZMod p` with `Nat.cast_sub` for this reason.
-* Proof idea: let `p` be the least prime factor of `n`. In `ZMod p`, `2 ^ n = 1`, so the
-  order `d` of `2` divides `n`. By Fermat, `d ∣ p - 1`. If `d ≥ 2` then `d` is a divisor of
-  `n` that is at least 2 and below `p`, contradicting minimality of `p`. So `d = 1`, which
-  means `2 = 1` in `ZMod p`, which is impossible.
+* Without `1 ≤ n` the statement fails at `n = 0`, since `2 ^ 0 - 1 = 0` and `0 ∣ 0`
+  (`naive_false`). The hypothesis is what "positive" meant.
+* Truncated subtraction is harmless because `1 ≤ 2 ^ n`. The proof moves to `ZMod p`
+  with `Nat.cast_sub`.
+* Proof: let `p` be the least prime factor of `n`. The order `d` of `2` in `ZMod p`
+  divides `n`, and by Fermat it divides `p - 1`. If `d ≥ 2` it is a divisor of `n` below
+  `p`, contradicting minimality, so `d = 1` and `2 = 1` in `ZMod p`.
 * Prior formalizations: none found in Mathlib (grep and Loogle) or compfiles (commit
-  `1745e6c`). Other public repositories were not searched. The proof here was written
-  without consulting any existing one.
+  `1745e6c`). Other public repositories were not searched. The proof was written without
+  consulting any existing one.
 -/
 
 namespace LeanPortfolio.NumberTheory
 
-/-- The statement without `1 ≤ n` fails at `n = 0`. -/
 theorem naive_false : ¬ ∀ n : ℕ, n ∣ 2 ^ n - 1 → n = 1 := by
   intro h
   exact absurd (h 0 (by norm_num)) (by norm_num)
@@ -34,7 +31,6 @@ theorem eq_one_of_dvd_two_pow_sub_one {n : ℕ} (hn : 1 ≤ n) (h : n ∣ 2 ^ n 
   have hp : p.Prime := Nat.minFac_prime hne
   haveI := Fact.mk hp
   have hpn : p ∣ n := Nat.minFac_dvd n
-  -- `2 ^ n = 1` in `ZMod p`
   have hpow : (2 : ZMod p) ^ n = 1 := by
     have h0 : ((2 ^ n - 1 : ℕ) : ZMod p) = 0 :=
       (ZMod.natCast_eq_zero_iff _ _).mpr (hpn.trans h)
@@ -48,7 +44,7 @@ theorem eq_one_of_dvd_two_pow_sub_one {n : ℕ} (hn : 1 ≤ n) (h : n ∣ 2 ^ n 
   have hd_n : orderOf (2 : ZMod p) ∣ n := orderOf_dvd_of_pow_eq_one hpow
   have hd_p : orderOf (2 : ZMod p) ∣ p - 1 :=
     orderOf_dvd_of_pow_eq_one (ZMod.pow_card_sub_one_eq_one h2)
-  -- the order of `2` is a divisor of `n` below `p`, so it must be `1`
+  -- a divisor of `n` below `p` must be `1`
   have hd1 : orderOf (2 : ZMod p) = 1 := by
     by_contra hd1
     have hd0 : orderOf (2 : ZMod p) ≠ 0 := by
