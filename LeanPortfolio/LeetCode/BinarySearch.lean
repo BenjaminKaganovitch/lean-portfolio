@@ -10,7 +10,8 @@ Given a sorted `a : Array Int` and `target : Int`, return an index `i` with
 
 * `BinarySearchSpec` is the full spec. `some i` must be an in-range index holding
   `target`, and `none` must mean `target` occurs nowhere in the array. Every `a[i]!` in
-  the specs sits next to a bound `i < a.size`, so `!` never hits its default.
+  the specs is guarded by a bound, either `i < a.size` directly or `i ≤ j < a.size` in
+  `Sorted`, so `!` never hits its default.
 * `WeakSpec` keeps only the first half: "if you return an index, it is correct". The
   constant `none` meets it on every input, since it never returns an index.
   `weak_spec_insufficient` proves this and shows the full spec rejects it on `#[1]`,

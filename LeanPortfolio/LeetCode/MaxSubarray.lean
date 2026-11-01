@@ -20,8 +20,9 @@ subarray.
 * `MaxSubarraySpec.weak` shows every correct result also meets `WeakSpec`.
 * The implementation is Kadane's recurrence. `kadane x l` handles the list `x :: l` and
   returns two numbers: the best sum of a nonempty prefix, and the best sum of a nonempty
-  infix. The step is `best prefix of x :: l = max x (x + best prefix of l)`, which is the
-  usual "best sum ending here" recurrence read from the right. The recursion follows the
+  infix. The step is `best prefix of x :: l = max x (x + best prefix of l)`, the "best
+  sum starting here" recurrence. It mirrors the usual left-to-right "best sum ending
+  here" loop. The recursion follows the
   list structure, so it is linear but not tail recursive.
 * LeetCode guarantees at least one element. `maxSubArray [] = 0` is a placeholder, and
   the spec theorem assumes `nums ≠ []`.

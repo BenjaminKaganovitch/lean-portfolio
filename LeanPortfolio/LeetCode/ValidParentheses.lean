@@ -18,7 +18,8 @@ bracket of the same type, in the correct order.
   `Balanced.insert`: putting a matching pair anywhere into a valid string keeps it valid.
 * `WeakSpec` asks only that accepted strings have matching counts of each bracket type,
   plus that valid strings are accepted. `countCheck` compares the counts and meets it on
-  every input. It accepts `)(` and `([)]`, neither of which is valid.
+  every input. It accepts `)(` and `([)]`, neither of which is valid (`countCheck_crossed`
+  and `not_balanced_crossed` cover the second).
   `weak_spec_insufficient` proves this using `)(`.
 * `ValidSpec.weak` shows every correct result also meets `WeakSpec`, using
   `Balanced.countsMatch`.
@@ -222,6 +223,12 @@ theorem countCheck_weak (l : List Char) : WeakSpec l (countCheck l) :=
 
 lemma countCheck_crossed : countCheck ['(', '[', ')', ']'] = true := by decide
 
+lemma not_balanced_crossed : ¬ Balanced ['(', '[', ')', ']'] := by
+  intro h
+  have := (isValidList_spec _).mpr h
+  revert this
+  decide
+
 /-- `WeakSpec` admits an implementation that violates the full spec. -/
 theorem weak_spec_insufficient :
     ∃ impl : List Char → Bool,
@@ -238,4 +245,5 @@ end LeanPortfolio.LeetCode.ValidParentheses
 #print axioms LeanPortfolio.LeetCode.ValidParentheses.isValid_iff
 #print axioms LeanPortfolio.LeetCode.ValidParentheses.ValidSpec.weak
 #print axioms LeanPortfolio.LeetCode.ValidParentheses.not_balanced_mismatch
+#print axioms LeanPortfolio.LeetCode.ValidParentheses.not_balanced_crossed
 #print axioms LeanPortfolio.LeetCode.ValidParentheses.weak_spec_insufficient
