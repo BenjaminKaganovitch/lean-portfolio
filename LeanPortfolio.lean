@@ -2,3 +2,4 @@ import LeanPortfolio.NumberTheory
 import LeanPortfolio.OrderTheory
 import LeanPortfolio.Analysis
 import LeanPortfolio.LeetCode.TwoSum
+import LeanPortfolio.LeetCode.BinarySearch
