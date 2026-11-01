@@ -23,7 +23,7 @@ Given `nums : List Int` and `target : Int`, return indices `i < j` with
 * The implementation is the quadratic search over pairs. The point of the file is the
   spec, not the hash map version.
 * Prior work: VERINA (`verina_advanced_78` to `80`) states Two Sum with its own spec and
-  implementation, but its proofs are `sorry`. Nothing for this problem was found in
+  implementation, but no completed proof. Nothing for this problem was found in
   human-eval-lean, CLEVER or AlgoVeri. Only task descriptions were read. Other public
   repositories were not searched.
 -/

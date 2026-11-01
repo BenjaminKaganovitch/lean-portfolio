@@ -26,7 +26,7 @@ subarray.
 * LeetCode guarantees at least one element. `maxSubArray [] = 0` is a placeholder, and
   the spec theorem assumes `nums ≠ []`.
 * Prior work: VERINA (`verina_advanced_45`, `verina_advanced_75`) and AlgoVeri
-  (`maximum_subarray_sum`) state this problem with proofs left as `sorry`.
+  (`maximum_subarray_sum`) state this problem with no completed proofs.
   human-eval-lean proves the minimum version (HumanEval 114), a different problem. Only
   task descriptions and file statistics were read, no proofs. Other public repositories
   were not searched.

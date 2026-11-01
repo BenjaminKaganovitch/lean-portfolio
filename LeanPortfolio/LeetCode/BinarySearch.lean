@@ -27,7 +27,7 @@ Given a sorted `a : Array Int` and `target : Int`, return an index `i` with
   difference between this model and fixed-width code, not something the proof covers.
   Termination is by `hi - lo`.
 * Prior work: VERINA (`verina_basic_51`) and AlgoVeri (`binary_search`) have related
-  lower-bound tasks with their proofs left as `sorry`. Nothing for this problem was found
+  lower-bound tasks with no completed proofs. Nothing for this problem was found
   in human-eval-lean or CLEVER.
   Only task descriptions were read. Other public repositories were not searched.
 -/

@@ -28,7 +28,7 @@ bracket of the same type, in the correct order.
 * `isValid` on `String` goes through `String.toList`. The proofs are about `List Char`.
 * Prior work: human-eval-lean proves a one-type version (`Common/Brackets.lean`, used by
   HumanEval 56 and 61), which cannot tell `(]` from `()`. AlgoVeri (`bracket_matching`)
-  and CLEVER state related tasks with proofs left as `sorry`. Only task descriptions,
+  and CLEVER state related tasks with no completed proofs. Only task descriptions,
   declaration names and file statistics were read, no proofs. Other public repositories
   were not searched.
 -/
