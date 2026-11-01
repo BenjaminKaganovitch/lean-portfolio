@@ -22,11 +22,13 @@ Given a sorted `a : Array Int` and `target : Int`, return an index `i` with
   is accepted. LeetCode promises distinct values, which the proof does not need.
 * Soundness (`search_sound`) holds for any array. Completeness (`search_complete`) uses
   `Sorted`, and `needs_sorted` shows it fails without it: on `#[2, 3, 1]` the search
-  misses `1`.
+  misses `1`, so `needs_sorted_spec` shows the full spec fails there.
 * The search keeps a half-open window `[lo, hi)` and probes `(lo + hi) / 2`. Indices are
   natural numbers, so the classic overflow in `lo + hi` cannot happen here. That is a
   difference between this model and fixed-width code, not something the proof covers.
   Termination is by `hi - lo`.
+* The spec checks only input/output behavior. LeetCode's O(log n) requirement is not
+  verified, and a linear scan would meet the same spec.
 * Prior work: VERINA (`verina_basic_51`) and AlgoVeri (`binary_search`) have related
   lower-bound tasks with no completed proofs. Nothing for this problem was found
   in human-eval-lean or CLEVER.
@@ -111,6 +113,11 @@ theorem binarySearch_spec (a : Array Int) (target : Int) (hs : Sorted a) :
 lemma needs_sorted : binarySearch #[2, 3, 1] 1 = none := by
   simp [binarySearch, search]
 
+lemma needs_sorted_spec : ¬ BinarySearchSpec #[2, 3, 1] 1 (binarySearch #[2, 3, 1] 1) := by
+  intro h
+  have := h.2 needs_sorted 2 (by simp)
+  simp at this
+
 /-- Wrong: never finds anything. -/
 def searchWrong (_a : Array Int) (_target : Int) : Option ℕ := none
 
@@ -135,4 +142,5 @@ end LeanPortfolio.LeetCode.BinarySearch
 #print axioms LeanPortfolio.LeetCode.BinarySearch.binarySearch_spec
 #print axioms LeanPortfolio.LeetCode.BinarySearch.BinarySearchSpec.weak
 #print axioms LeanPortfolio.LeetCode.BinarySearch.needs_sorted
+#print axioms LeanPortfolio.LeetCode.BinarySearch.needs_sorted_spec
 #print axioms LeanPortfolio.LeetCode.BinarySearch.weak_spec_insufficient

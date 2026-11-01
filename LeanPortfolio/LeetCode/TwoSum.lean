@@ -14,12 +14,15 @@ Given `nums : List Int` and `target : Int`, return indices `i < j` with
 * `WeakSpec` differs from `TwoSumSpec` in one place: it asks for `i ≤ j` instead of
   `i < j`. That allows `i = j`, so the same element counts twice. `twoSumWrong` searches
   pairs with `i ≤ j`, and `weak_spec_insufficient` shows it meets `WeakSpec` on every
-  input while failing `TwoSumSpec` on `nums = [3]`, `target = 6`, where it returns
-  `some (0, 0)`.
+  input while failing `TwoSumSpec` on LeetCode's Example 2, `nums = [3, 2, 4]`,
+  `target = 6`, where it returns `some (0, 0)` instead of the pair `(1, 2)`.
 * `WeakSpec` really is weaker: `TwoSumSpec.weak` shows every correct result satisfies it.
   So the weak spec accepts all right answers and some wrong ones.
 * LeetCode promises exactly one solution. The spec here does not assume that: any valid
   pair is accepted, and `none` is required when no pair exists.
+* LeetCode accepts the two indices in either order. `TwoSumSpec` fixes `i < j`, so it
+  rejects `some (1, 0)` where LeetCode would accept `[1, 0]`. This is a normalization
+  that makes the spec stricter than LeetCode, not weaker.
 * The implementation is the quadratic search over pairs. The point of the file is the
   spec, not the hash map version.
 * Prior work: VERINA (`verina_advanced_78` to `80`) states Two Sum with its own spec and
@@ -104,7 +107,7 @@ theorem twoSumWrong_weak (nums : List Int) (target : Int) :
     simp only [beq_iff_eq] at this
     exact this hs
 
-lemma twoSumWrong_example : twoSumWrong [3] 6 = some (0, 0) := by decide
+lemma twoSumWrong_example : twoSumWrong [3, 2, 4] 6 = some (0, 0) := by decide
 
 /-- `WeakSpec` admits an implementation that violates the full spec. -/
 theorem weak_spec_insufficient :
@@ -112,7 +115,7 @@ theorem weak_spec_insufficient :
       (∀ nums target, WeakSpec nums target (impl nums target)) ∧
       ¬ ∀ nums target, TwoSumSpec nums target (impl nums target) := by
   refine ⟨twoSumWrong, twoSumWrong_weak, fun h => ?_⟩
-  have := (h [3] 6).1 0 0 twoSumWrong_example
+  have := (h [3, 2, 4] 6).1 0 0 twoSumWrong_example
   omega
 
 end LeanPortfolio.LeetCode.TwoSum

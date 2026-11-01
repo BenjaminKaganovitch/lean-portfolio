@@ -27,6 +27,7 @@ Built with AI assistance (Claude). Every proof compiles at the pinned commit wit
   weak spec asks for `i ≤ j` instead of `i < j`, so pairing an element with itself passes.
 - `LeanPortfolio/LeetCode/BinarySearch.lean` (LeetCode 704): binary search on a sorted
   array. The weak spec only checks returned indices, so always returning `none` passes.
+  The spec checks only input/output behavior; the O(log n) requirement is not verified.
 - `LeanPortfolio/LeetCode/MaxSubarray.lean` (LeetCode 53): Kadane's recurrence. The weak
   spec only asks for the sum of some subarray, so returning the first element passes.
 - `LeanPortfolio/LeetCode/ValidParentheses.lean` (LeetCode 20): stack scan against a
