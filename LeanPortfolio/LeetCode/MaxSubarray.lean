@@ -4,6 +4,29 @@ import Mathlib
 # Maximum Subarray (LeetCode 53)
 
 Return the largest sum of a nonempty contiguous subarray of a nonempty `nums : List Int`.
+
+## Design notes
+
+* A subarray is a nonempty infix (`s <:+: nums`, `s ≠ []`). `List.IsInfix` keeps
+  contiguity in the statement; `s <+ nums` (`List.Sublist`) would allow gaps and change
+  the problem.
+* Weak-spec trap: `WeakSpec` asks only that `r` be the sum of some subarray.
+  `maxSubArrayWrong` returns the first element, the sum of `[x]`, so it meets `WeakSpec`
+  on every nonempty input (`maxSubArrayWrong_weak`). On `[1, 2]` it returns `1` where the
+  answer is `3`, and `weak_spec_insufficient` is proved from this input. Every correct
+  result meets `WeakSpec` (`MaxSubarraySpec.weak`).
+* `kadane x l` works on `x :: l` and returns the best nonempty prefix sum and the best
+  nonempty infix sum. Its step, `best prefix of x :: l = max x (x + best prefix of l)`,
+  is the "best sum starting here" recurrence, the mirror of the usual left-to-right "best
+  sum ending here" loop. It follows the list structure, so it makes one recursive call
+  per element and is not tail recursive. No running time is verified.
+* LeetCode guarantees at least one element. `maxSubArray [] = 0` is a placeholder, and
+  `maxSubArray_spec` assumes `nums ≠ []`.
+* Prior work: VERINA (`verina_advanced_45`, `verina_advanced_75`) and AlgoVeri
+  (`maximum_subarray_sum`) state the problem with no completed proofs. human-eval-lean
+  proves the minimum version (HumanEval 114), a different problem. Only task
+  descriptions and file statistics were read; other public repositories were not
+  searched.
 -/
 
 namespace LeanPortfolio.LeetCode.MaxSubarray
@@ -115,3 +138,7 @@ theorem weak_spec_insufficient :
   simp [maxSubArrayWrong] at this
 
 end LeanPortfolio.LeetCode.MaxSubarray
+
+#print axioms LeanPortfolio.LeetCode.MaxSubarray.maxSubArray_spec
+#print axioms LeanPortfolio.LeetCode.MaxSubarray.MaxSubarraySpec.weak
+#print axioms LeanPortfolio.LeetCode.MaxSubarray.weak_spec_insufficient

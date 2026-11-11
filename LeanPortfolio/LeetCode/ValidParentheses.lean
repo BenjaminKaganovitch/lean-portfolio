@@ -5,6 +5,30 @@ import Mathlib
 
 Decide whether every bracket in a string over `()[]{}` is closed by one of the same type,
 in the right order.
+
+## Design notes
+
+* `Balanced` is the grammar of valid strings. Since `IsPair` has three typed pairs, `(]`
+  is rejected (`rejects_mismatch`) and lies outside the grammar
+  (`not_balanced_mismatch`). A spec that ignores bracket type would accept it.
+* `isValidList` is the usual stack scan, and `isValidList_spec` proves both directions.
+  The hard direction rests on `Balanced.insert`: a matching pair inserted anywhere into a
+  valid string leaves it valid.
+* Weak-spec trap: `WeakSpec` still requires valid strings to be accepted, but asks
+  accepted strings only to have matching counts of each type. `countCheck` meets it on
+  every input and accepts `)(` and `([)]`, both invalid. `weak_spec_insufficient` uses
+  `)(`; `countCheck_crossed` and `not_balanced_crossed` cover `([)]`. Every correct result
+  meets `WeakSpec` (`ValidSpec.weak`, via `Balanced.countsMatch`).
+* LeetCode inputs contain only brackets. Any other character takes the closing branch and
+  matches nothing, so the scan rejects it, and no grammar rule produces it. This is read
+  off the definitions; no lemma here states it.
+* `isValid` on `String` goes through `String.toList`; the proofs are about `List Char`.
+* Prior work: human-eval-lean proves a one-pair version (`Common/Brackets.lean`, used by
+  HumanEval 56 and 61). It tracks one bracket pair and skips every other character, so it
+  cannot tell `([)]` from `()`. AlgoVeri (`bracket_matching`) and CLEVER state related
+  tasks with no completed proofs. Only task descriptions, declaration names, the
+  `isBalanced` definition and file statistics were read; other public repositories were
+  not searched.
 -/
 
 namespace LeanPortfolio.LeetCode.ValidParentheses
@@ -204,3 +228,10 @@ theorem weak_spec_insufficient :
   decide
 
 end LeanPortfolio.LeetCode.ValidParentheses
+
+#print axioms LeanPortfolio.LeetCode.ValidParentheses.isValidList_spec
+#print axioms LeanPortfolio.LeetCode.ValidParentheses.isValid_iff
+#print axioms LeanPortfolio.LeetCode.ValidParentheses.ValidSpec.weak
+#print axioms LeanPortfolio.LeetCode.ValidParentheses.not_balanced_mismatch
+#print axioms LeanPortfolio.LeetCode.ValidParentheses.not_balanced_crossed
+#print axioms LeanPortfolio.LeetCode.ValidParentheses.weak_spec_insufficient

@@ -4,6 +4,30 @@ import Mathlib
 # Two Sum (LeetCode 1)
 
 Return indices `i < j` with `nums[i] + nums[j] = target`, or `none` if no pair works.
+
+## Design notes
+
+* `TwoSumSpec` bounds every index it reads (`i < j < nums.length`), so `!` never hits its
+  default.
+* Weak-spec trap: `WeakSpec` asks for `i ≤ j` where `TwoSumSpec` asks for `i < j`, so an
+  element can pair with itself. `twoSumWrong` does that and meets `WeakSpec` on every
+  input (`twoSumWrong_weak`). On LeetCode's Example 2, `[3, 2, 4]` with target `6`, it
+  returns `some (0, 0)` (`twoSumWrong_example`), which `TwoSumSpec` rejects. LeetCode's
+  answer there is `[1, 2]`. `weak_spec_insufficient` is proved from this input. Every
+  correct result meets `WeakSpec` (`TwoSumSpec.weak`).
+* Deviations from LeetCode: no uniqueness assumption, so any valid pair is accepted and
+  `none` is required when no pair exists. Indices come in increasing order, so
+  `some (1, 0)` is rejected where LeetCode accepts `[1, 0]`, which makes the spec
+  stricter than LeetCode.
+* The implementation is the brute-force search over all index pairs. The number of pairs
+  is quadratic, and `nums[i]!` on a `List` is not constant time, so this is not the
+  quadratic array loop. No running time is verified. The hash map solution is not
+  attempted.
+* Prior work: VERINA (`verina_advanced_78` to `80`) has a spec and implementation with no
+  completed proof. HumanEval 43 (`pairs_sum_to_zero`) is the yes/no version with target
+  `0`, a different problem: human-eval-lean proves it, and CLEVER states it with no
+  completed proof. Nothing found in AlgoVeri. Only task descriptions and theorem
+  statements were read; other public repositories were not searched.
 -/
 
 namespace LeanPortfolio.LeetCode.TwoSum
@@ -87,3 +111,7 @@ theorem weak_spec_insufficient :
   omega
 
 end LeanPortfolio.LeetCode.TwoSum
+
+#print axioms LeanPortfolio.LeetCode.TwoSum.twoSum_spec
+#print axioms LeanPortfolio.LeetCode.TwoSum.TwoSumSpec.weak
+#print axioms LeanPortfolio.LeetCode.TwoSum.weak_spec_insufficient

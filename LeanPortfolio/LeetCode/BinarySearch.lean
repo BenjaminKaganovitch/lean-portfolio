@@ -5,6 +5,28 @@ import Mathlib
 
 Given a sorted `a : Array Int`, return an index holding `target`, or `none` if it is
 absent.
+
+## Design notes
+
+* Every `a[i]!` in the specs is guarded by a bound, `i < a.size` directly or
+  `i ≤ j < a.size` in `Sorted`, so `!` never hits its default.
+* Weak-spec trap: `WeakSpec` keeps soundness and drops completeness, the half that needs
+  sortedness. The constant `none` (`searchWrong`) meets it on every input and fails the
+  full spec on `#[1]`, target `1`. `weak_spec_insufficient` is proved from these two
+  facts, and its statement quantifies over sorted inputs only. Every correct result meets
+  `WeakSpec` (`BinarySearchSpec.weak`).
+* `Sorted` is non-decreasing, so duplicates are allowed and any matching index is
+  accepted. LeetCode promises distinct values; the proof does not need them.
+* `search_sound` holds for any array; `search_complete` needs `Sorted`. On `#[2, 3, 1]`
+  the search misses `1` (`needs_sorted`), so the full spec fails there
+  (`needs_sorted_spec`).
+* Indices are natural numbers, so the fixed-width overflow in `lo + hi` cannot happen in
+  this model, and the proof says nothing about it. Termination is by `hi - lo`.
+* The spec checks only input/output behavior. LeetCode's O(log n) requirement is not
+  verified, and a linear scan would meet the same spec.
+* Prior work: VERINA (`verina_basic_51`) and AlgoVeri (`binary_search`) have related
+  lower-bound tasks with no completed proofs. Nothing found in human-eval-lean or CLEVER.
+  Only task descriptions were read; other public repositories were not searched.
 -/
 
 namespace LeanPortfolio.LeetCode.BinarySearch
@@ -104,3 +126,9 @@ theorem weak_spec_insufficient :
   simp at this
 
 end LeanPortfolio.LeetCode.BinarySearch
+
+#print axioms LeanPortfolio.LeetCode.BinarySearch.binarySearch_spec
+#print axioms LeanPortfolio.LeetCode.BinarySearch.BinarySearchSpec.weak
+#print axioms LeanPortfolio.LeetCode.BinarySearch.needs_sorted
+#print axioms LeanPortfolio.LeetCode.BinarySearch.needs_sorted_spec
+#print axioms LeanPortfolio.LeetCode.BinarySearch.weak_spec_insufficient
