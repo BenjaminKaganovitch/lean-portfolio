@@ -1,5 +1,7 @@
 # Lean portfolio
 
+[![build](https://github.com/BenjaminKaganovitch/lean-portfolio/actions/workflows/build.yml/badge.svg)](https://github.com/BenjaminKaganovitch/lean-portfolio/actions/workflows/build.yml)
+
 Seven Lean 4 files built on Mathlib: three math formalizations and four verified LeetCode
 problems.
 
@@ -55,6 +57,8 @@ file.
 Install [elan](https://github.com/leanprover/elan), then:
 
 ```
+git clone https://github.com/BenjaminKaganovitch/lean-portfolio.git
+cd lean-portfolio
 lake exe cache get
 lake build
 ```
@@ -62,3 +66,5 @@ lake build
 `lake exe cache get` downloads prebuilt Mathlib, so only the files in this repository
 get compiled. The axiom output shows up as info messages. To check a single file, run
 `lake env lean LeanPortfolio/NumberTheory.lean`.
+
+CI runs the same steps on every push and fails if any `.lean` file contains `sorry`.
